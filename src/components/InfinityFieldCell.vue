@@ -1,7 +1,5 @@
 <template>
-    <div class="cell" :style="{'background': backColor}" @click="onClick">
-
-    </div>
+    <div class="cell" :class="cellBackground" @click="onClick" :title="coords"></div>
 </template>
 
 <script>
@@ -9,29 +7,19 @@ export default {
     name: 'InfinityFieldCell',
 
     props: {
-        coords: {},
+        coords: {
+            type: Array,
+            required: true,
+        },
         mark: {
             type: Number,
             default: 0,
         },
     },
 
-    data() {
-        return {
-            state: 0,
-        };
-    },
-
     computed: {
-        backColor() {
-            switch (this.mark) {
-                case 0:
-                    return '#ffd3b6';
-                case 1:
-                    return 'black';
-                case 2:
-                    return 'white';
-            }
+        cellBackground() {
+            return { 0: '', 1: 'cell1', 2: 'cell2' }[this.mark];
         },
     },
 
@@ -42,10 +30,6 @@ export default {
             }
         },
     },
-
-    /* mounted() {
-        console.log(this.coords);
-    }*/
 };
 </script>
 
@@ -66,5 +50,14 @@ $background-color: #ffd3b6;
 .cell:hover {
     border: 1px solid $background-color;
     background: $border-color !important;
+}
+
+.cell1,
+.cell1:hover {
+    background: #000000 !important;
+}
+.cell2,
+.cell2:hover {
+    background: #ffffff !important;
 }
 </style>

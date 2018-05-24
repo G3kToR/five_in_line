@@ -1,19 +1,19 @@
 <template>
     <div id="app">
-        <TheHelloForm v-if="players" @start-game="onStartGame" />
-        <TheInfinityField v-else />
+        <TheHelloForm v-if="!players" @start-game="onStartGame" />
+        <ThePlayground v-else :players="players" @new-players="onNewPlayers" />
     </div>
 </template>
 
 <script>
 import TheHelloForm from './components/TheHelloForm';
-import TheInfinityField from './components/TheInfinityField.vue';
+import ThePlayground from './components/ThePlayground';
 export default {
     name: 'app',
 
     components: {
         TheHelloForm,
-        TheInfinityField,
+        ThePlayground,
     },
 
     data() {
@@ -25,7 +25,10 @@ export default {
     methods: {
         onStartGame($event) {
             this.players = $event;
-            console.log($event);
+        },
+
+        onNewPlayers() {
+            this.players = null;
         },
     },
 };
