@@ -95,36 +95,23 @@ export default {
         },
 
         checkWinnerLine([x, y], type) {
-            
-            let coord;
-            let x1, x2, y1, y2, dx, dy;
+            let x1, x2, y1, y2, coord;
 
             if (type === 'x') {
                 x1 = x - 4;
                 x2 = x + 4;
                 y1 = y;
                 y2 = y;
-                dx = x2 - x1;
-                dy = y2 - y1;
                 coord = x;
-            } else {
+            } else if (type === 'y') {
                 x1 = x;
                 x2 = x;
                 y1 = y + 4;
                 y2 = y - 4;
-                dx = x2 - x1;
-                dy = y2 - y1;
                 coord = y;
             }
 
-            const lineMark = this.marksArr.filter(mark => {
-                const [mrkX, mrkY, mrkPl] = mark;
-
-                return (
-                    mrkPl === this.player &&
-                    dx * (mrkY - y1) - (mrkX - x1) * dy === 0
-                );
-            });
+            const lineMark = this.findPlayerMarks([x, y], {x1, x2, y1, y2});
 
             if (lineMark.length < 5) {
                 return false;
@@ -143,28 +130,20 @@ export default {
         },
 
         checkWinnerDiagonal([x, y], type) {
-            
             let x1, x2, y1, y2;
-
             if (type === 'left') {
                 x1 = x - 4;
                 x2 = x + 4;
                 y1 = y + 4;
                 y2 = y - 4;
-            } else {
+            } else if (type === 'right') {
                 x1 = x + 4;
                 x2 = x - 4;
                 y1 = y + 4;
                 y2 = y - 4;
             }
 
-            const lineMark = this.marksArr.filter(mark => {
-                const [mrkX, mrkY, mrkPl] = mark;
-                return (
-                    mrkPl === this.player &&
-                    (mrkX - x1) / (x2 - x1) === (mrkY - y1) / (y2 - y1)
-                );
-            });
+            const lineMark = this.findPlayerMarks([x, y], {x1, x2, y1, y2});
 
             if (lineMark.length < 5) {
                 return false;
@@ -183,6 +162,24 @@ export default {
                 }
             }
             return counter === 5;
+        },
+
+        findPlayerMarks([x, y], {x1, x2, y1, y2}) {
+            let dx, dy;
+
+            dx = x2 - x1;
+            dy = y2 - y1;
+
+            const lineMark = this.marksArr.filter(mark => {
+                const [mrkX, mrkY, mrkPl] = mark;
+
+                return (
+                    mrkPl === this.player &&
+                    dx * (mrkY - y1) - (mrkX - x1) * dy === 0
+                );
+            });
+
+            return lineMark;
         },
 
         calcCoords(row, col) {
