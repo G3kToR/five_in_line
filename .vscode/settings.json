@@ -8,7 +8,6 @@
     "prettier.useTabs": false,
     "vetur.format.defaultFormatter.html": "js-beautify-html",
     "terminal.integrated.shell.windows": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-    "tslint.configFile": "tslint.json",
     "tslint.alwaysShowRuleFailuresAsWarnings": true,
     "tslint.alwaysShowStatus": true,
     "eslint.alwaysShowStatus": true,

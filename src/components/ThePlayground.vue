@@ -20,23 +20,6 @@
         </div>
         <img-arrow :size="120" :rotate="90" class="arrow arrow_row" @click="moveField('bottom')" />
 
-        <div class="modal fade" id="myModal" key="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="false">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalCenterTitle">Игра окончена!</h5>
-                    </div>
-                    <div class="modal-body">
-                        Победил {{ getPlayerName }}! Хотите попробовать еще?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="newPlayers">Сменить игроков</button>
-                        <button type="button" class="btn btn-primary" data-dismiss="modal" @click="newGame">Еще раз</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 </template>
 
@@ -67,9 +50,6 @@ export default {
     },
 
     computed: {
-        getPlayerName() {
-            return this.players[this.player - 1];
-        },
         userColor() {
             return `user-icon_${this.player}`;
         },
@@ -111,7 +91,7 @@ export default {
                 coord = y;
             }
 
-            const lineMark = this.findPlayerMarks([x, y], {x1, x2, y1, y2});
+            const lineMark = this.findPlayerMarks([x, y], { x1, x2, y1, y2 });
 
             if (lineMark.length < 5) {
                 return false;
@@ -143,7 +123,7 @@ export default {
                 y2 = y - 4;
             }
 
-            const lineMark = this.findPlayerMarks([x, y], {x1, x2, y1, y2});
+            const lineMark = this.findPlayerMarks([x, y], { x1, x2, y1, y2 });
 
             if (lineMark.length < 5) {
                 return false;
@@ -164,7 +144,7 @@ export default {
             return counter === 5;
         },
 
-        findPlayerMarks([x, y], {x1, x2, y1, y2}) {
+        findPlayerMarks([x, y], { x1, x2, y1, y2 }) {
             let dx, dy;
 
             dx = x2 - x1;
