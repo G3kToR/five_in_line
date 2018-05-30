@@ -1,35 +1,29 @@
 <template>
     <div id="app">
-        <TheHelloForm v-if="!players" @start-game="onStartGame" />
-        <ThePlayground v-else :players="players" @new-players="onNewPlayers" />
+        <TheHelloForm v-if="!getPlayer.name" />
+        <TheGameRooms v-else-if="getPlayer.name && !getRoomId" />
+        <ThePlayground v-if="getRoomId" />
     </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
+
 import TheHelloForm from './components/TheHelloForm';
+import TheGameRooms from './components/TheGameRooms.vue';
 import ThePlayground from './components/ThePlayground';
+
 export default {
     name: 'app',
 
     components: {
         TheHelloForm,
+        TheGameRooms,
         ThePlayground,
     },
 
-    data() {
-        return {
-            players: null,
-        };
-    },
-
-    methods: {
-        onStartGame($event) {
-            this.players = $event;
-        },
-
-        onNewPlayers() {
-            this.players = null;
-        },
+    computed: {
+        ...mapGetters(['getPlayer', 'getRoomId']),
     },
 };
 </script>
@@ -38,11 +32,8 @@ export default {
 @import 'main';
 
 #app {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    width: 100%;
+    height: 100%;
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

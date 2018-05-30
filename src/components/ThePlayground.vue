@@ -1,12 +1,28 @@
 <template>
 
-    <div class="playground">
+    <div v-if="isLoad" class="playground">
 
-        <div class="header">
-            <p>Ход игрока:
-                <span class="user-icon" :class="userColor"></span>{{ getPlayerName }}</p>
-            <button type="button" class="btn btn-light" @click="newGame">Рестарт</button>
-        </div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <p class="navbar-brand mb-0">
+                Комната №{{ gameRoom.id }}
+            </p>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbar">
+                <div class="navbar-nav">
+                    <a class="nav-item nav-link" href="#" @click.prevent="restartGame">Рестарт</a>
+                    <a class="nav-item nav-link" href="#" @click.prevent="leaveGameRoom">Покинуть комнату</a>
+                </div>
+            </div>
+
+            <p class="navbar-brand mb-0">
+                Ход игрока:
+                <span class="user-icon" :class="userColor"></span>{{ getPlayerName }}
+            </p>
+        </nav>
 
         <img-arrow :size="120" :rotate="-90" class="arrow arrow_row" @click="moveField('top')" />
         <div class="field-wrapper">
@@ -20,42 +36,76 @@
         </div>
         <img-arrow :size="120" :rotate="90" class="arrow arrow_row" @click="moveField('bottom')" />
 
+        <TheModal v-if="gameRoom.status > 0" :type="modalType" @modal-close="modalType = 'default'" />
+
     </div>
 </template>
 
 <script>
+import { mapActions, mapGetters } from 'vuex';
+
 import InfinityFieldCell from './InfinityFieldCell.vue';
 import ImgArrow from './images/img-arrow.vue';
+import TheModal from './TheModal/TheModal.vue';
+
 export default {
     name: 'ThePlayground',
 
     components: {
         InfinityFieldCell,
         ImgArrow,
-    },
-
-    props: {
-        players: {
-            type: Array,
-            required: true,
-        },
+        TheModal,
     },
 
     data() {
         return {
-            begin: [0, 0],
-            marksArr: [],
-            player: 1,
+            isLoad: false,
+            modalType: 'default',
         };
     },
 
     computed: {
+        ...mapGetters(['getPlayer', 'getCurrentPlayer']),
+        ...mapGetters({
+            gameRoom: 'getGameRoom',
+        }),
+
         userColor() {
             return `user-icon_${this.player}`;
+        },
+
+        players() {
+            return this.gameRoom.players;
+        },
+
+        getPlayerName() {
+            return this.gameRoom ? this.getCurrentPlayer.name : 'Аноним';
+        },
+
+        player() {
+            return this.gameRoom.player;
+        },
+
+        begin: {
+            get() {
+                return this.gameRoom.begin;
+            },
+            set(value) {
+                this.editGameRoom({
+                    key: 'begin',
+                    value: value,
+                });
+            },
+        },
+
+        marksArr() {
+            return this.gameRoom.marksArr.slice();
         },
     },
 
     methods: {
+        ...mapActions(['editGameRoom', 'leaveGameRoom', 'setGameMark', 'loadGameRoomFromApi']),
+
         onClickCell([x, y]) {
             this.marksArr.push([x, y, this.player]);
 
@@ -65,13 +115,16 @@ export default {
                     this.checkWinnerLine([x, y], 'y') ||
                     this.checkWinnerDiagonal([x, y], 'left') ||
                     this.checkWinnerDiagonal([x, y], 'right');
+
                 if (result) {
-                    $('#myModal').modal({ backdrop: 'static' });
-                    return;
+                    return this.editGameRoom({
+                        key: 'status',
+                        value: 2,
+                    });
                 }
             }
 
-            this.player = this.player === 1 ? 2 : 1;
+            this.setGameMark(this.marksArr);
         },
 
         checkWinnerLine([x, y], type) {
@@ -99,9 +152,7 @@ export default {
 
             let counter = 0;
             for (let i = coord - 4; i <= coord + 4; i++) {
-                counter = lineMark.find(mark => mark[+(type === 'y')] === i)
-                    ? ++counter
-                    : 0;
+                counter = lineMark.find(mark => mark[+(type === 'y')] === i) ? ++counter : 0;
                 if (counter === 5) {
                     break;
                 }
@@ -132,9 +183,7 @@ export default {
             let counter = 0;
             let yn = type === 'right' ? y - 4 : y + 4;
             for (let i = x - 4; i <= x + 4; i++) {
-                counter = lineMark.find(mark => mark[0] === i && mark[1] === yn)
-                    ? ++counter
-                    : 0;
+                counter = lineMark.find(mark => mark[0] === i && mark[1] === yn) ? ++counter : 0;
                 yn = type === 'right' ? yn + 1 : yn - 1;
 
                 if (counter === 5) {
@@ -153,10 +202,7 @@ export default {
             const lineMark = this.marksArr.filter(mark => {
                 const [mrkX, mrkY, mrkPl] = mark;
 
-                return (
-                    mrkPl === this.player &&
-                    dx * (mrkY - y1) - (mrkX - x1) * dy === 0
-                );
+                return mrkPl === this.player && dx * (mrkY - y1) - (mrkX - x1) * dy === 0;
             });
 
             return lineMark;
@@ -176,33 +222,46 @@ export default {
         },
 
         moveField(direct) {
+            if (this.getPlayer.id !== this.getCurrentPlayer.id) return;
+
             switch (direct) {
                 case 'top':
-                    this.begin[1]++;
+                    this.begin = [this.begin[0], ++this.begin[1]];
                     break;
                 case 'right':
-                    this.begin[0]++;
+                    this.begin = [++this.begin[0], this.begin[1]];
                     break;
                 case 'bottom':
-                    this.begin[1]--;
+                    this.begin = [this.begin[0], --this.begin[1]];
                     break;
                 case 'left':
-                    this.begin[0]--;
+                    this.begin = [--this.begin[0], this.begin[1]];
                     break;
             }
 
             this.$forceUpdate();
         },
 
-        newGame() {
-            this.begin = [0, 0];
-            this.marksArr.length = 0;
-            this.player = 1;
+        restartGame() {
+            this.modalType = 'restart';
+            this.editGameRoom({ key: 'status', value: 5 });
         },
+    },
 
-        newPlayers() {
-            this.$emit('new-players');
-        },
+    created() {
+        this.loadGameRoomFromApi().then(() => {
+            this.isLoad = true;
+        });
+
+        window.onbeforeunload = () => {
+            const isLeave = window.confirm(
+                'Вы действительно хотите уйти? У вас есть несохранённые изменения!'
+            );
+
+            if (isLeave) {
+                this.leaveGameRoom();
+            }
+        };
     },
 };
 </script>
@@ -214,13 +273,21 @@ $background-color: #fff0e7;
 .playground {
     width: 100%;
     height: 100%;
+    min-height: 100vh;
     min-width: 900px;
-    padding-top: 60px;
     background: $background-color;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     white-space: nowrap;
+
+    .navbar {
+        box-shadow: 0px 0px 8px #dfb5b3;
+
+        .navbar-brand {
+            font-size: 16px;
+        }
+    }
 }
 
 .field-wrapper {
@@ -262,8 +329,8 @@ $background-color: #fff0e7;
     margin-bottom: -50px;
 }
 
-.header {
-    text-align: center;
+.step {
+    float: right;
 }
 
 .user-icon {

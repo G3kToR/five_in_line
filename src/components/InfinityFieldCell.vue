@@ -3,6 +3,8 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
+
 export default {
     name: 'InfinityFieldCell',
 
@@ -18,14 +20,27 @@ export default {
     },
 
     computed: {
+        ...mapGetters([
+            'getPlayer',
+            'getGameRoom',
+            'getCurrentPlayer',
+        ]),
+        
         cellBackground() {
             return { 0: '', 1: 'cell1', 2: 'cell2' }[this.mark];
+        },
+
+        checkCurrentPlayer() {
+            const player = this.getPlayer;
+            const currentPlayer = this.getCurrentPlayer;
+
+            return player.id === currentPlayer.id;
         },
     },
 
     methods: {
         onClick() {
-            if (this.mark === 0) {
+            if (this.mark === 0 && this.checkCurrentPlayer) {
                 this.$emit('click', this.coords);
             }
         },

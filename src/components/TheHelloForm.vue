@@ -10,7 +10,10 @@
 
                 <div class="form-group">
                     <label for="player-name">Для начала введите свое имя.</label>
-                    <input type="text" class="form-control" id="player-name" placeholder="Введите ваше имя" v-model="playerName">
+                    <input type="text" class="form-control" :class="{ 'is-invalid': nameError }" id="player-name" placeholder="Введите ваше имя" v-model="playerName">
+                    <div class="invalid-feedback">
+                        Пожалуйста, введите имя.
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Далее</button>
@@ -28,16 +31,32 @@ export default {
     data() {
         return {
             playerName: '',
+            nameError: false,
         };
     },
 
     methods: {
-        startGame() {
-            this.players = this.players.map((player, index) => {
-                return !player ? 'Игрок' + (index + 1) : player;
-            });
+        clear_str(value) {
+            let result = value;
 
-            this.$emit('start-game', this.players);
+            if (typeof result === 'string') {
+                result = result
+                    .replace(/<[^>]*?script[^>]*?>/gi, '')
+                    .replace(/<[^>]*?js:[^>]*?>/gi, '');
+                result = result
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                return result;
+            } else {
+                return value;
+            }
+        },
+
+        startGame() {
+            const name = this.clear_str(this.playerName);
+
+            name ? this.$store.commit('setPlayer', { name }) : (this.nameError = true);
         },
     },
 };
