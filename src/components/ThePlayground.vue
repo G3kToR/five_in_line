@@ -24,17 +24,17 @@
             </p>
         </nav>
 
-        <img-arrow :size="120" :rotate="-90" class="arrow arrow_row" @click="moveField('top')" />
+        <img-arrow :size="120" :rotate="-90" class="arrow arrow_row" :class="hideArrows" @click="moveField('top')" />
         <div class="field-wrapper">
-            <img-arrow :size="120" :rotate="180" class="arrow arrow_column" @click="moveField('left')" />
+            <img-arrow :size="120" :rotate="180" class="arrow arrow_column" :class="hideArrows" @click="moveField('left')" />
             <div class="field">
                 <div class="column" v-for="row in 10" :key="'row'+row">
                     <InfinityFieldCell v-for="col in 10" :key="'col'+col" :coords="calcCoords(row, col)" :mark="checkMark(calcCoords(row, col))" @click="onClickCell" />
                 </div>
             </div>
-            <img-arrow :size="120" class="arrow arrow_column" @click="moveField('right')" />
+            <img-arrow :size="120" class="arrow arrow_column" :class="hideArrows" @click="moveField('right')" />
         </div>
-        <img-arrow :size="120" :rotate="90" class="arrow arrow_row" @click="moveField('bottom')" />
+        <img-arrow :size="120" :rotate="90" class="arrow arrow_row" :class="hideArrows" @click="moveField('bottom')" />
 
         <TheModal v-if="gameRoom.status > 0" :type="modalType" @modal-close="modalType = 'default'" />
 
@@ -65,10 +65,14 @@ export default {
     },
 
     computed: {
-        ...mapGetters(['getPlayer', 'getCurrentPlayer']),
+        ...mapGetters(['getCurrentPlayer', 'checkPlayerStep']),
         ...mapGetters({
             gameRoom: 'getGameRoom',
         }),
+
+        hideArrows() {
+            return !this.checkPlayerStep ? 'arrow__hide' : '';
+        },
 
         userColor() {
             return `user-icon_${this.player}`;
@@ -79,7 +83,9 @@ export default {
         },
 
         getPlayerName() {
-            return this.gameRoom ? this.getCurrentPlayer.name : 'Аноним';
+            return this.getCurrentPlayer && 'name' in this.getCurrentPlayer
+                ? this.getCurrentPlayer.name
+                : 'Аноним';
         },
 
         player() {
@@ -104,7 +110,12 @@ export default {
     },
 
     methods: {
-        ...mapActions(['editGameRoom', 'leaveGameRoom', 'setGameMark', 'loadGameRoomFromApi']),
+        ...mapActions([
+            'editGameRoom',
+            'leaveGameRoom',
+            'setGameMark',
+            'loadGameRoomFromApi',
+        ]),
 
         onClickCell([x, y]) {
             this.marksArr.push([x, y, this.player]);
@@ -152,7 +163,9 @@ export default {
 
             let counter = 0;
             for (let i = coord - 4; i <= coord + 4; i++) {
-                counter = lineMark.find(mark => mark[+(type === 'y')] === i) ? ++counter : 0;
+                counter = lineMark.find(mark => mark[+(type === 'y')] === i)
+                    ? ++counter
+                    : 0;
                 if (counter === 5) {
                     break;
                 }
@@ -183,7 +196,9 @@ export default {
             let counter = 0;
             let yn = type === 'right' ? y - 4 : y + 4;
             for (let i = x - 4; i <= x + 4; i++) {
-                counter = lineMark.find(mark => mark[0] === i && mark[1] === yn) ? ++counter : 0;
+                counter = lineMark.find(mark => mark[0] === i && mark[1] === yn)
+                    ? ++counter
+                    : 0;
                 yn = type === 'right' ? yn + 1 : yn - 1;
 
                 if (counter === 5) {
@@ -202,7 +217,10 @@ export default {
             const lineMark = this.marksArr.filter(mark => {
                 const [mrkX, mrkY, mrkPl] = mark;
 
-                return mrkPl === this.player && dx * (mrkY - y1) - (mrkX - x1) * dy === 0;
+                return (
+                    mrkPl === this.player &&
+                    dx * (mrkY - y1) - (mrkX - x1) * dy === 0
+                );
             });
 
             return lineMark;
@@ -222,7 +240,7 @@ export default {
         },
 
         moveField(direct) {
-            if (this.getPlayer.id !== this.getCurrentPlayer.id) return;
+            if (!this.checkPlayerStep) return;
 
             switch (direct) {
                 case 'top':
@@ -312,6 +330,8 @@ $background-color: #fff0e7;
 .arrow {
     cursor: pointer;
     opacity: 0.5;
+    transition-property: opacity;
+    transition-duration: 1s;
 }
 
 .arrow:hover {
@@ -327,6 +347,10 @@ $background-color: #fff0e7;
     display: inline-block;
     width: 120px;
     margin-bottom: -50px;
+}
+
+.arrow__hide {
+    opacity: 0;
 }
 
 .step {

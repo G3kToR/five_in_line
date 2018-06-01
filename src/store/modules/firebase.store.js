@@ -59,17 +59,26 @@ const FirebaseStore = {
     },
 
     connectGameRoom({ state, commit, dispatch, getters }, roomId) {
-      const roomPlayers = getters.getPlayersInRoom(roomId);
-      const result = !roomPlayers ? [] : roomPlayers;
 
-      if (result.length < 2) {
+      const Room = getters.getRooms[roomId];
+      const result = 'players' in Room ? Room.players : [];
+
+      if (Room.colPlayers < 2) {
         state.db.ref('rooms').off();
 
         result.push(getters.getPlayer);
-        state.db.ref(`/rooms/${roomId}/players`).set(result);
+
         commit('setRoomId', roomId);
 
-        if (result.length === 2) {
+        dispatch('editGameRoom', [{
+          key: 'players',
+          value: result
+        }, {
+          key: 'colPlayers',
+          value: ++Room.colPlayers
+        }]);
+
+        if (Room.colPlayers === 2) {
           dispatch('resetGameRoom', { status: 0 });
         }
       } else {
@@ -115,6 +124,7 @@ const FirebaseStore = {
         id: Date.now()
           .toString()
           .substr(4, 6),
+        colPlayers: 0,
         players: [],
         marksArr: [[0, 0, 0]],
         begin: [0, 0],
@@ -122,23 +132,27 @@ const FirebaseStore = {
         status: 1,
       };
 
-      state.db.ref('/rooms/' + newRoomKey).update(room);
-      return dispatch('connectGameRoom', newRoomKey);
+      return state.db.ref('/rooms/' + newRoomKey).update(room).then( () => {
+        return dispatch('connectGameRoom', newRoomKey);
+      });
+  
     },
 
     leaveGameRoom({ commit, dispatch, getters }) {
-      const roomPlayers = getters.getPlayersInRoom(getters.getRoomId);
+     
+      const Room = getters.getGameRoom;
 
-      roomPlayers.forEach((player, index) => {
+      Room.players.forEach((player, index) => {
         if (player.id === getters.getPlayer.id) {
-          roomPlayers.splice(index, 1);
+          Room.players.splice(index, 1);
+          getters.getGameRoomRef.child('colPlayers').set(--Room.colPlayers);
         }
       });
 
-      if (roomPlayers.length === 0) {
+      if (Room.colPlayers === 0) {
         getters.getGameRoomRef.remove();
       } else {
-        getters.getGameRoomRef.child('players').set(roomPlayers);
+        getters.getGameRoomRef.child('players').set(Room.players);
         dispatch('editGameRoom', {
           key: 'status',
           value: 1,
@@ -182,18 +196,12 @@ const FirebaseStore = {
       return state.db.ref('rooms').child(getters.getRoomId);
     },
 
-    getPlayersInRoom: state => roomId => {
-      let roomPlayers;
-
-      state.db.ref(`/rooms/${roomId}/players/`).once('value', snapshot => {
-        roomPlayers = snapshot.val();
-      });
-
-      return roomPlayers;
-    },
-
     getCurrentPlayer(state, getters) {
       return getters.getGameRoom.players[getters.getGameRoom.player - 1];
+    },
+
+    checkPlayerStep(state, getters) {
+      return (getters.getCurrentPlayer && getters.getPlayer.id === getters.getCurrentPlayer.id);
     }
   },
 };
