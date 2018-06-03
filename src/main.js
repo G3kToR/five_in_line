@@ -10,9 +10,11 @@ new Vue({
     this.$store.dispatch('apiConnect');
     this.$store.dispatch('loadInfoFromStore');
     window.addEventListener('storage', (events) => {
-        if (events.key === 'roomId' ) { // && events.oldValue && !events.newValue
+        if (events.key === 'roomId' ) {
             this.$store.commit('setRoomId', events.newValue);
-            console.log('stor');
+        }
+        if (events.key === 'playerKey' ) {
+            this.$store.commit('setPlayerKey', events.newValue);
         }
     });
   },

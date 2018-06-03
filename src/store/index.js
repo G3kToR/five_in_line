@@ -26,7 +26,6 @@ const store = new Vuex.Store({
             if (!player) {
                 state.player.name = '';
                 state.player.id = '';
-                state.player.key = '';
                 StoreService.remove('player');
                 return;
             }
@@ -44,11 +43,23 @@ const store = new Vuex.Store({
 
         setPlayerKey(state, key) {
             state.playerKey = key;
+
+            if (!key) {
+                StoreService.remove('playerKey');
+                return;
+            }
+
             StoreService.set('playerKey', state.playerKey);
         },
 
         setRoomId(state, id) {
             state.roomId = id;
+
+            if (!id) {
+                StoreService.remove('roomId');
+                return;
+            }
+
             StoreService.set('roomId', state.roomId);
         }
     },
@@ -69,6 +80,12 @@ const store = new Vuex.Store({
             if (playerKey) {
                 commit('setPlayerKey', playerKey);
             }
+        },
+
+        clearPlayerInfo({ commit }) {
+            commit('setPlayer', null);
+            commit('setRoomId', '');
+            commit('setPlayerKey', '');
         }
     },
 

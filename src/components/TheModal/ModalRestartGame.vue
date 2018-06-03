@@ -12,7 +12,7 @@
 
         <template slot="footer">
             <button type="button" class="btn btn-danger" @click="cancelRestart">Нет</button>
-            <button type="button" class="btn btn-success" @click="restartGame">Да</button>
+            <button type="button" class="btn btn-success" @click="restartGameRoom">Да</button>
         </template>
 
     </TheModalContent>
@@ -35,30 +35,20 @@ export default {
         ModalWaitPlayers,
     },
 
-    props: {
-        /*wait: {
-            type: Boolean,
-            default: false,
-        },*/
-    },
-
     computed: {
-        ...mapGetters(['getCurrentPlayer']),
+        ...mapGetters(['getPlayerFromApi']),
 
         wait() {
-            return ('status' in this.getCurrentPlayer && this.getCurrentPlayer.status === 1);
+            return (this.getPlayerFromApi && ('status' in this.getPlayerFromApi) && this.getPlayerFromApi.status === 1);
         }
     },
 
     methods: {
-        ...mapActions(['leaveGameRoom', 'editGameRoom', 'resetGameRoom']),
+        ...mapActions(['leaveGameRoom', 'editGameRoom', 'restartGameRoom', 'resetPlayersStatus']),
 
         cancelRestart() {
             this.editGameRoom({ key: 'status', value: 0 });
-        },
-
-        restartGame() {
-            this.resetGameRoom({ status: 0 });
+            this.resetPlayersStatus();
         },
     },
 };

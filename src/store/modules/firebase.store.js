@@ -45,7 +45,7 @@ const FirebaseStore = {
         },
 
         loadGameRoomFromApi({ state, commit, getters }) {
-            getters.getDB.ref('rooms').off();
+
             return new Promise((resolve, reject) => {
                 getters.getGameRoomRef.on('value', snapshot => {
                     if (!snapshot.val()) {
@@ -61,17 +61,9 @@ const FirebaseStore = {
 
         connectGameRoom({ state, commit, dispatch, getters }, roomId) {
 
-            /*if (getters.getRoomId) {
-                console.log(getters.getRoomId);
-                return false;
-            }*/
-
-            //const result = 'players' in Room ? Room.players : [];
-
             if (getters.getRooms[roomId].colPlayers < 2) {
 
-                //result.push(getters.getPlayer);
-
+                getters.getDB.ref('rooms').off();
                 commit('setRoomId', roomId);
 
                 return dispatch('editGameRoom', [{
@@ -81,20 +73,10 @@ const FirebaseStore = {
                     const playerKey = getters.getGameRoomRef.child('players').push(getters.getPlayer).key;
                     commit('setPlayerKey', playerKey);
 
-                    if (getters.getRooms[roomId].colPlayers === 2) {
+                    if (getters.getRooms[roomId].colPlayers + 1 === 2) {
                         dispatch('resetGameRoom', { status: 0 });
                     }
                 });
-
-
-                /*dispatch('editGameRoom', [{
-                  key: 'players',
-                  value: result
-                }, {
-                  key: 'colPlayers',
-                  value: ++Room.colPlayers
-                }]);*/
-
 
             } else {
                 return false;
@@ -121,19 +103,27 @@ const FirebaseStore = {
             return getters.getGameRoomRef.update(updates);
         },
 
+        resetPlayersStatus({ getters }) {
+            for (const key of Object.keys(getters.getGameRoom.players)) {
+                getters.getGameRoomRef.child('players').child(key).child('status').set(0);
+            }
+        },
+
         restartGameRoom({ dispatch, getters }) {
-            //console.log(getters.getPlayerKey);
+
             getters.getGameRoomRef.child('players').child(getters.getPlayerKey).child('status').set(1);
 
-            if (getters.getGameRoom.status + 1  === 4) {
-                //getters.getGameRoomRef.child('players').
-                return dispatch('resetGameRoom', { status: 0 });
+            let colVote = 0;
+            for (const key of Object.keys(getters.getGameRoom.players)) {
+                if (getters.getGameRoom.players[key].status === 1) {
+                    colVote++;
+                }
             }
 
-            return dispatch('editGameRoom', {
-                key: 'status',
-                value: getters.getGameRoom.status,
-            });
+            if (colVote === 2) {
+                dispatch('resetGameRoom', { status: 0 });
+                return dispatch('resetPlayersStatus');
+            }
         },
 
         addGameRoom({ commit, dispatch, getters }) {
@@ -155,20 +145,14 @@ const FirebaseStore = {
                 return dispatch('connectGameRoom', newRoomKey);
             });
 
-        },
+        }
+        ,
 
         leaveGameRoom({ commit, dispatch, getters }) {
 
-            //const Room = getters.getGameRoom;
-
-            /*dispatch('editGameRoom', {
-                key: 'colPlayers',
-                value: Room.colPlayers - 1,
-            });*/
-
-
-            if (!('players' in getters.getGameRoom)) {
-                return getters.getGameRoomRef.remove();
+            if (!getters.getPlayerKey) {
+                getters.getGameRoomRef.off();
+                return commit('setRoomId', '');
             }
 
             for (const key of Object.keys(getters.getGameRoom.players)) {
@@ -179,37 +163,23 @@ const FirebaseStore = {
                         value: getters.getGameRoom.colPlayers - 1,
                     }).then(() => {
                         if (getters.getGameRoom.colPlayers === 0) {
+                            getters.getGameRoomRef.off();
                             getters.getGameRoomRef.remove();
                         } else {
+                            getters.getGameRoomRef.off();
                             dispatch('editGameRoom', {
                                 key: 'status',
                                 value: 1,
                             });
                         }
+
+                        commit('setGameRoom', null);
                         commit('setRoomId', '');
+                        commit('setPlayerKey', '');
                     });
 
                 }
             }
-
-
-            /*Room.players.forEach((player, index) => {
-                if (player.id === getters.getPlayer.id) {
-                    Room.players.splice(index, 1);
-                    getters.getGameRoomRef.child('colPlayers').set(--Room.colPlayers);
-                }
-            });
-
-            if (Room.colPlayers === 0) {
-                getters.getGameRoomRef.remove();
-            } else {
-                getters.getGameRoomRef.child('players').set(Room.players);
-                dispatch('editGameRoom', {
-                    key: 'status',
-                    value: 1,
-                });
-            }*/
-
 
         },
 
@@ -228,6 +198,7 @@ const FirebaseStore = {
             }
 
         },
+
     },
 
     getters: {
@@ -248,14 +219,25 @@ const FirebaseStore = {
         },
 
         getCurrentPlayer(state, getters) {
-            //return getters.getGameRoom.players[getters.getGameRoom.player - 1];
-            //console.log(getters.getGameRoom);
             if (!('players' in getters.getGameRoom)) {
                 return null;
             }
             let i = 1;
             for (const key of Object.keys(getters.getGameRoom.players)) {
                 if (i++ === getters.getGameRoom.player) {
+                    return getters.getGameRoom.players[key];
+                }
+            }
+        },
+
+        getPlayerFromApi(state, getters) {
+            return getters.getGameRoom.players[getters.getPlayerKey];
+        },
+
+        getCurrentPlayerIndex(state, getters) {
+            let i = 0;
+            for (const key of Object.keys(getters.getGameRoom.players)) {
+                if (i + 1 === getters.getGameRoom.player) {
                     return getters.getGameRoom.players[key];
                 }
             }

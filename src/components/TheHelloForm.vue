@@ -12,7 +12,7 @@
                     <label for="player-name">Для начала введите свое имя.</label>
                     <input type="text" class="form-control" :class="{ 'is-invalid': nameError }" id="player-name" placeholder="Введите ваше имя" v-model="playerName">
                     <div class="invalid-feedback">
-                        Пожалуйста, введите имя.
+                        Пожалуйста, введите имя (Только буквы и цифры).
                     </div>
                 </div>
 
@@ -47,6 +47,8 @@ export default {
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;');
+                result = result
+                    .replace(/[^A-Za-zА-Яа-яЁё0-9]/g, '');
                 return result;
             } else {
                 return value;

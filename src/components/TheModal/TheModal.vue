@@ -2,8 +2,8 @@
     <div class="modal fade" id="modal" key="modal" tabindex="-1" role="dialog" aria-hidden="false">
         <div class="modal-dialog modal-dialog-centered" role="modal">
             <ModalWaitPlayers v-if="getGameRoom.status === 1" />
-            <ModalFinalGame v-else-if="getGameRoom.status >= 2 && getGameRoom.status < 5" />
-            <ModalRestartGame v-else-if="getGameRoom.status >= 5" :wait="type === 'restart'" />
+            <ModalFinalGame v-else-if="getGameRoom.status === 2" />
+            <ModalRestartGame v-else-if="getGameRoom.status === 3" />
         </div>
     </div>
 </template>
@@ -24,15 +24,8 @@ export default {
         ModalRestartGame,
     },
 
-    props: {
-        type: {
-            type: String,
-            default: 'default',
-        }
-    },
-
     computed: {
-        ...mapGetters(['getGameRoom']),
+        ...mapGetters(['getGameRoom', 'getPlayerKey']),
     },
 
     mounted() {

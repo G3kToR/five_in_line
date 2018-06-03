@@ -1,5 +1,5 @@
 <template>
-    <TheModalContent v-if="isFinish">
+    <TheModalContent v-if="!wait">
 
         <template slot="header">
             Игра окончена!
@@ -11,11 +11,13 @@
 
         <template slot="footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="leaveGameRoom">Отмена</button>
-            <button type="button" class="btn btn-primary" @click="restartGame">Еще раз</button>
+            <button v-if="getPlayerKey" type="button" class="btn btn-primary" @click="restartGameRoom">Еще раз</button>
         </template>
 
     </TheModalContent>
+
     <ModalWaitPlayers v-else />
+
 </template>
 
 <script>
@@ -32,23 +34,16 @@ export default {
         ModalWaitPlayers,
     },
 
-    data() {
-        return {
-            isFinish: true,
-        };
-    },
-
     computed: {
-        ...mapGetters(['getCurrentPlayer']),
+        ...mapGetters(['getCurrentPlayer', 'getPlayerFromApi', 'getPlayerKey']),
+
+        wait() {
+            return (this.getPlayerFromApi && ('status' in this.getPlayerFromApi) && this.getPlayerFromApi.status === 1);
+        }
     },
 
     methods: {
         ...mapActions(['leaveGameRoom', 'restartGameRoom']),
-
-        restartGame() {
-            this.restartGameRoom();
-            this.isFinish = false;
-        },
     },
 };
 </script>

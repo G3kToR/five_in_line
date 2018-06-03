@@ -13,7 +13,7 @@
 
             <div class="collapse navbar-collapse" id="navbar">
                 <div class="navbar-nav">
-                    <a class="nav-item nav-link" href="#" @click.prevent="restartGame">Рестарт</a>
+                    <a v-if="getPlayerKey" class="nav-item nav-link" href="#" @click.prevent="restartGame">Рестарт</a>
                     <a class="nav-item nav-link" href="#" @click.prevent="leaveGameRoom">Покинуть комнату</a>
                 </div>
             </div>
@@ -36,7 +36,7 @@
         </div>
         <img-arrow :size="120" :rotate="90" class="arrow arrow_row" :class="hideArrows" @click="moveField('bottom')" />
 
-        <TheModal v-if="gameRoom.status > 0" :type="modalType" @modal-close="modalType = 'default'" />
+        <TheModal v-if="(gameRoom.status > 0 && getPlayerKey) || (gameRoom.status > 0 && gameRoom.status < 3 && !getPlayerKey)" />
 
     </div>
 </template>
@@ -60,12 +60,11 @@
         data() {
             return {
                 isLoad: false,
-                modalType: 'default',
             };
         },
 
         computed: {
-            ...mapGetters(['getCurrentPlayer', 'checkPlayerStep']),
+            ...mapGetters(['getCurrentPlayer', 'checkPlayerStep', 'getPlayerKey']),
             ...mapGetters({
                 gameRoom: 'getGameRoom',
             }),
@@ -77,10 +76,6 @@
             userColor() {
                 return `user-icon_${this.player}`;
             },
-
-            /*players() {
-                return this.gameRoom.players;
-            },*/
 
             getPlayerName() {
                 return this.getCurrentPlayer && 'name' in this.getCurrentPlayer
@@ -115,6 +110,7 @@
                 'leaveGameRoom',
                 'setGameMark',
                 'loadGameRoomFromApi',
+                'restartGameRoom',
             ]),
 
             onClickCell([x, y]) {
@@ -261,10 +257,8 @@
             },
 
             restartGame() {
-                this.modalType = 'restart';
-                //console.log(this.$store.getters.getPlayerKey);
-                this.$store.getters.getGameRoomRef.child('players').child(this.$store.getters.getPlayerKey).child('status').set(1);
-                this.editGameRoom({ key: 'status', value: 5 });
+                this.editGameRoom({ key: 'status', value: 3 });
+                this.restartGameRoom();
             },
         },
 
@@ -272,29 +266,8 @@
             this.loadGameRoomFromApi().then(() => {
                 this.isLoad = true;
             });
-
-            /*window.onbeforeunload = () => {
-                this.leaveGameRoom();
-            };
-
-            window.onunload = () => {
-                this.leaveGameRoom();
-                /*const isLeave = window.confirm(
-                    'Вы действительно хотите уйти? У вас есть несохранённые изменения!'
-                );
-
-                if (isLeave) {
-                    this.leaveGameRoom();
-                }
-            };
-            window.addEventListener("beforeunload", (event) => {
-                this.leaveGameRoom();
-            });*/
         },
 
-        /*beforeDestroy() {
-            this.leaveGameRoom();
-        }*/
     };
 </script>
 
