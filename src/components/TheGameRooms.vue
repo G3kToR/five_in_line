@@ -16,9 +16,9 @@
                 </div>
                 <ul v-else class="list-group list-group-flush">
                     <li v-for="(room, key) in rooms" :key="key" class="list-group-item">
-                        <p class="card-text">Комната №{{ room.id }}. Игроки: {{ playersLength(room) }}/2
+                        <p class="card-text">Комната №{{ room.id }}. Игроки: {{ room.colPlayers }}/2
                             <span>({{ room.players | playersList }})</span>
-                            <button type="button" class="btn btn-outline-primary" :disabled="playersLength(room) === 2" @click="connectGameRoom(key)">Присоединиться</button>
+                            <button type="button" class="btn btn-outline-primary" :disabled="room.colPlayers === 2" @click="connectGameRoom(key)">Присоединиться</button>
                         </p>
                     </li>
                 </ul>
@@ -41,9 +41,15 @@ export default {
     filters: {
         playersList: value => {
             if (!value) return '';
-            return value.map(item => {
+            let result = [];
+            for(const key of Object.keys(value)) {
+                result.push(value[key].name);
+            }
+            return result.join(', ');
+
+            /*return value.map(item => {
                 return item.name;
-            }).join(', ');
+            }).join(', ');*/
         },
     },
 
@@ -62,10 +68,6 @@ export default {
     methods: {
         ...mapMutations(['setPlayer']),
         ...mapActions(['addGameRoom', 'connectGameRoom', 'loadRoomsFromApi']),
-
-        playersLength(room) {
-            return 'players' in room ? room.players.length : 0;
-        },
     },
 
     created() {

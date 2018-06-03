@@ -6,7 +6,7 @@
         </template>
 
         <template slot="body">
-            Победил {{ getPlayerName }}! Хотите попробовать еще?
+            Победил {{ getCurrentPlayer.name }}! Хотите попробовать еще?
         </template>
 
         <template slot="footer">
@@ -39,11 +39,7 @@ export default {
     },
 
     computed: {
-        ...mapGetters(['getGameRoom']),
-
-        getPlayerName() {
-            return this.getGameRoom.players[this.getGameRoom.player - 1].name;
-        },
+        ...mapGetters(['getCurrentPlayer']),
     },
 
     methods: {

@@ -49,7 +49,7 @@ $background-color: #ffd3b6;
     width: 50px;
     height: 50px;
     padding: 0;
-    margin: 2px;
+    margin: 2px 1px;
     border: 1px solid $border-color;
     background: $background-color;
     cursor: pointer;

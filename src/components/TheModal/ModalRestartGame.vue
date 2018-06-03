@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 
 import TheModalContent from './TheModalContent.vue';
 import ModalWaitPlayers from './ModalWaitPlayers.vue';
@@ -36,10 +36,18 @@ export default {
     },
 
     props: {
-        wait: {
+        /*wait: {
             type: Boolean,
             default: false,
-        },
+        },*/
+    },
+
+    computed: {
+        ...mapGetters(['getCurrentPlayer']),
+
+        wait() {
+            return ('status' in this.getCurrentPlayer && this.getCurrentPlayer.status === 1);
+        }
     },
 
     methods: {
